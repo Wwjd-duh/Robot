@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Robot Control</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+        }
+
+        #joystick-container {
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+        }
+
+        #joystick-base {
+            width: 200px;
+            height: 200px;
+            background: #ddd;
+            border-radius: 50%;
+            position: relative;
+            touch-action: none;
+        }
+
+        #joystick-stick {
+            width: 60px;
+            height: 60px;
+            background: #444;
+            border-radius: 50%;
+            position: absolute;
+            left: 70px;
+            top: 70px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Robot Control</h1>
+
+<h2>Drive</h2>
+
+<div id="joystick-container">
+    <div id="joystick-base">
+        <div id="joystick-stick"></div>
+    </div>
+</div>
+
+<button onclick="stopRobot()">STOP</button>
+
+<h2>Head</h2>
+Tilt:
+<input type="range" min="-1" max="1" step="0.1" id="tilt">
+Pan:
+<input type="range" min="-1" max="1" step="0.1" id="pan">
+<button onclick="sendHead()">Move Head</button>
+
+<h2>Waist</h2>
+<input type="range" min="-1" max="1" step="0.1" id="waist">
+<button onclick="sendWaist()">Move Waist</button>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+
+
+<h2>Say</h2>
+
+<button onclick="sendSay(1)">Say 1</button>
+<button onclick="sendSay(2)">Say 2</button>
+<button onclick="sendSay(3)">Say 3</button>
+<button onclick="sendSay(4)">Say 4</button>
+
+<div id="dialog-box">
+    <input type="text" id="dialogInput" placeholder="Type what you say..." />
+    <button onclick="sendDialog()">Send</button>
+</div>
+
+</body>
+</html>
