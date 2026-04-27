@@ -47,7 +47,7 @@ class Robot:
         self.waist = Motor(self.controller, 2, center=5000, range_=2000)
 
         # RIGHT ARM
-        self.rsUD = Motor(self.controller, 5, center=5000, range_=1000)
+        self.rsUD = Motor(self.controller, 5, center=4000, range_=1000)
         self.reSS = Motor(self.controller, 6, center=6000, range_=1000)
         self.reUD = Motor(self.controller, 7, center=5000, range_=1000)
         self.rwUD = Motor(self.controller, 8, center=6000, range_=1000)
@@ -104,6 +104,9 @@ class Robot:
     # -------------------------
     def set_waist(self, value):
         self.waist.set_speed(value)
+
+    def moveLArm(self, value):
+        self.lsUD.set_speed(value)
 
     # -------------------------
     # STOP EVERYTHING

@@ -1,5 +1,7 @@
 import re
 import random
+import sp   # <-- your text to speech module
+
 
 class Rule:
     def __init__(self, level, pattern, output):
@@ -8,9 +10,11 @@ class Rule:
         self.output = output.strip()
         self.subrules = []
 
+
 class DialogEngine:
 
     def __init__(self, state_machine, action_runner, script_file):
+
         self.state_machine = state_machine
         self.action_runner = action_runner
 
@@ -69,7 +73,6 @@ class DialogEngine:
 
                 try:
 
-                    # determine level
                     if line[1].isdigit():
                         level = int(line[1])
                     else:
@@ -98,7 +101,6 @@ class DialogEngine:
                     else:
 
                         if level - 1 >= len(stack):
-
                             print(f"Parser warning line {lineno}: missing parent")
                             continue
 
@@ -136,9 +138,7 @@ class DialogEngine:
 
             return "Resetting."
 
-        # check active rules first
-        #rule = self.match_rules(self.active_rules, text)
-
+        # Check active rules first
         rule = self.match_rules(self.active_rules, text)
 
         if not rule:
@@ -155,7 +155,20 @@ class DialogEngine:
 
             speak, actions = self.process_output(rule.output)
 
-            self.action_runner.run_actions(actions)
+            print("Robot response:", speak)
+            print("Requesting actions:", actions)
+
+            # Run robot motions
+            if actions:
+                self.action_runner.run_actions(actions)
+
+            # Speak response
+            if speak:
+                try:
+                    sp.engine.say(speak)
+                    sp.engine.runAndWait()
+                except Exception as e:
+                    print("TTS error:", e)
 
             return speak
 
@@ -168,10 +181,11 @@ class DialogEngine:
     # --------------------------------------------------
 
     def normalize(self, text):
-
         text = text.lower()
+        # remove punctuation
         text = re.sub(r"[^\w\s]", "", text)
-
+        # collapse multiple spaces
+        text = re.sub(r"\s+", " ", text)
         return text.strip()
 
     # --------------------------------------------------
@@ -193,40 +207,40 @@ class DialogEngine:
 
     def match_pattern(self, pattern, text):
 
-        pattern = pattern.lower()
+        # normalize pattern the same way
+        pattern = re.sub(r"\s+", " ", pattern.lower()).strip()
+        text = self.normalize(text)
 
         # definition
         if pattern.startswith("~"):
-
             name = pattern[1:]
-
             if name in self.definitions:
-
                 for word in self.definitions[name]:
                     if text == word.lower():
                         return True
 
         # bracket choices
         if pattern.startswith("["):
-
             options = re.findall(r'"([^"]+)"|\b(\w+)\b', pattern)
             words = [a or b for a, b in options]
-
             return text in [w.lower() for w in words]
 
-        # variable capture
+        # variable capture "_"
         if "_" in pattern:
+            # split pattern at underscore and collapse spaces
+            parts = [p.strip() for p in pattern.split("_")]
+            if len(parts) == 2:
+                prefix, suffix = parts
+                if text.startswith(prefix) and text.endswith(suffix):
+                    captured = text[len(prefix):]
+                    if suffix:
+                        captured = captured[:-len(suffix)]
+                    captured = captured.strip()
+                    if captured:
+                        self.variables["name"] = captured
+                        return True
 
-            prefix = pattern.replace("_", "").strip()
-
-            if text.startswith(prefix):
-
-                captured = text[len(prefix):].strip()
-
-                if captured:
-                    self.variables["name"] = captured
-                    return True
-
+        # exact match
         return text == pattern
 
     # --------------------------------------------------
@@ -237,7 +251,6 @@ class DialogEngine:
 
         # variable recall
         for var in self.variables:
-
             output = output.replace(f"${var}", self.variables[var])
 
         # random choices
